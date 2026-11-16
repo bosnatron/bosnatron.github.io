@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111111">
+  <title>BOSNATRON — Linux Test Edition</title>
+  <style>
+    :root { color-scheme: light; }
+    html, body { width: 100%; min-height: 100%; margin: 0; }
+    body { background: #E4B749; overflow: hidden; }
+    /* Almost invisible, fine square weave on the gold canvas. */
+    body::before {
+      content: ""; position: fixed; inset: 0; pointer-events: none;
+      background-image:
+        linear-gradient(to right, rgba(90, 61, 26, .085) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(90, 61, 26, .085) 1px, transparent 1px);
+      background-size: 8px 8px;
+    }
+    .topic-bar {
+      position: fixed; top: 0; left: 0; right: 0; min-height: 86px;
+      box-sizing: border-box; padding: 2px 22px 3px;
+      z-index: 4; background: #D40000;
+      box-shadow: 0 2px 8px rgba(60, 29, 12, .15);
+      pointer-events: none;
+    }
+    .topic-heading {
+      margin: 0; color: #F2CF73;
+      font: 200 clamp(20px, 3.15vw, 30px)/1 "Helvetica Neue", "Segoe UI Light", "Arial", sans-serif;
+      letter-spacing: .035em;
+    }
+    .topic-details {
+      margin: 0; color: #F2CF73;
+      font: 700 clamp(11px, 1.4vw, 13px)/1.1 Arial, Helvetica, sans-serif;
+      letter-spacing: .06em;
+    }
+    .topic-details span { display: block; }
+    .sunlight {
+      position: fixed; inset: 0; pointer-events: none;
+      background: radial-gradient(circle 240px at var(--light-x, 50%) var(--light-y, 50%),
+        rgba(255, 244, 198, .24) 0%, rgba(255, 244, 198, .07) 42%, transparent 100%);
+    }
+    .gear-field { position: fixed; inset: 0; display: block; width: 100%; height: 100%; pointer-events: none; }
+    .gear { fill: #765838; fill-opacity: .20; stroke: #D40000; stroke-opacity: .60; stroke-width: .7; }
+    .gear-cutout { fill: #E4B749; fill-opacity: .76; }
+    .gear-wheel { transform-box: fill-box; transform-origin: center; animation: gear-turn 24s linear infinite; }
+    .gear-wheel.reverse { animation-direction: reverse; }
+    @keyframes gear-turn { from { transform: rotate(var(--initial-angle)); } to { transform: rotate(calc(var(--initial-angle) + 360deg)); } }
+    /* Linux test-download presentation; inactive pending release acceptance. */
+    .download-stage {
+      position: fixed; z-index: 3; top: calc(50% + 35px); left: 50%;
+      transform: translate(-50%, -50%); width: min(90vw, 530px);
+      box-sizing: border-box; padding: 26px 16px 24px;
+      text-align: center; color: #54341E;
+      background: rgba(240, 202, 112, .82);
+      border: 1px solid rgba(121, 74, 33, .24);
+      border-radius: 16px;
+      box-shadow: 0 10px 34px rgba(89, 61, 19, .12);
+    }
+    .download-intro { margin: 0 0 8px; font: 600 13px/1.4 Arial, sans-serif; letter-spacing: .18em; }
+    .download-name { margin: 0; font: 300 clamp(30px, 6vw, 44px)/1.1 "Helvetica Neue", Arial, sans-serif; letter-spacing: .07em; }
+    .download-platform { margin: 12px 0 0; font: 700 clamp(13px, 2.2vw, 17px)/1.4 Arial, sans-serif; letter-spacing: .075em; }
+    .download-version { margin: 4px 0 18px; font: 700 12px/1.4 Arial, sans-serif; letter-spacing: .14em; }
+    .download-action {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 190px; min-height: 49px; padding: 8px 25px;
+      border: 1px solid rgba(150, 17, 12, .7); border-radius: 9px;
+      color: #FFF2D6; background: #B82B21;
+      font: 700 14px/1.3 Arial, sans-serif; letter-spacing: .1em;
+      cursor: not-allowed; opacity: .8;
+    }
+    .download-status { margin: 10px 0 0; font: 11px/1.5 Arial, sans-serif; color: #593F25; }
+    @media (max-height: 480px) {
+      .download-stage { top: calc(50% + 24px); padding: 12px; }
+      .download-version { margin-bottom: 8px; }
+    }
+    .credit {
+      position: fixed; left: 16px; right: 16px; bottom: 12px;
+      margin: 0; color: #315b91; font: 11px/1.5 Arial, Helvetica, sans-serif;
+      text-align: center; letter-spacing: .015em;
+    }
+    .magnifier {
+      position: fixed; z-index: 5; width: 132px; height: 132px;
+      border-radius: 50%; box-sizing: border-box; overflow: hidden;
+      border: 2px solid rgba(49, 91, 145, .56);
+      background: rgba(211, 194, 151, .97);
+      box-shadow: 0 5px 18px rgba(89, 67, 37, .19), inset 0 0 14px rgba(255,255,255,.24);
+      pointer-events: none; opacity: 0; visibility: hidden;
+      transition: opacity .12s ease;
+    }
+    .magnifier.visible { opacity: 1; visibility: visible; }
+    .magnified-credit {
+      position: absolute; margin: 0; font: 11px/1.5 Arial, Helvetica, sans-serif;
+      color: #315b91; text-align: center; letter-spacing: .015em;
+      transform-origin: top left; pointer-events: none;
+    }
+    @media (prefers-reduced-motion: reduce) { .gear-wheel { animation-play-state: paused; } }
+  </style>
+</head>
+<body>
+  <div class="sunlight" aria-hidden="true"></div>
+  <header class="topic-bar" aria-label="Bright Vale project testing header">
+    <h1 class="topic-heading">EDIN'S PROJECT</h1>
+    <p class="topic-details"><span>BRIGHT VALE</span><span>PERSONAL ASSISTANT</span><span>LINUX TEST EDITION 2026</span></p>
+  </header>
+  <svg id="gearField" class="gear-field" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg>
+  <section class="download-stage" aria-labelledby="download-name">
+    <p class="download-intro">DOWNLOAD:</p>
+    <h2 class="download-name" id="download-name">BRIGHT VALE</h2>
+    <p class="download-platform">FOR LINUX</p>
+    <p class="download-version">TESTING VERSION</p>
+    <button class="download-action" type="button" disabled aria-describedby="download-status">DOWNLOAD</button>
+    <p class="download-status" id="download-status">Linux testing package not yet available.</p>
+  </section>
+  <p class="credit">This page is Edin's creation. All copyrights are allowed regarding this HTML code and visual preview. Powered by BOSNATRON.</p>
+  <div id="creditMagnifier" class="magnifier" aria-hidden="true">
+    <p id="magnifiedCredit" class="magnified-credit"></p>
+  </div>
+  <script>
+    (() => {
+      const svg = document.getElementById('gearField');
+      const NS = 'http://www.w3.org/2000/svg';
+      const teeth = 16;
+      const pitchRadius = 70;
+      const outerRadius = 76;
+      const rootRadius = 64;
+      const step = pitchRadius * 2;
+      const toothAngle = (2 * Math.PI) / teeth;
+
+      const outline = [];
+      for (let t = 0; t < teeth; t++) {
+        const start = t * toothAngle;
+        for (const [fraction, radius] of [
+          [0.00, rootRadius], [0.16, rootRadius],
+          [0.32, outerRadius], [0.68, outerRadius],
+          [0.84, rootRadius]
+        ]) {
+          const angle = start + fraction * toothAngle;
+          outline.push(`${(Math.cos(angle) * radius).toFixed(2)},${(Math.sin(angle) * radius).toFixed(2)}`);
+        }
+      }
+
+      function element(tag, attributes) {
+        const node = document.createElementNS(NS, tag);
+        for (const [name, value] of Object.entries(attributes)) node.setAttribute(name, value);
+        return node;
+      }
+
+      function draw() {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+        svg.replaceChildren();
+        const columns = Math.ceil(width / step) + 2;
+        const rows = Math.ceil(height / step) + 2;
+
+        for (let row = -1; row < rows; row++) {
+          for (let column = -1; column < columns; column++) {
+            const x = column * step + step / 2;
+            const y = row * step + step / 2;
+            const carrier = element('g', { transform: `translate(${x} ${y})` });
+            const wheel = element('g', { class: `gear-wheel${(row + column) % 2 ? ' reverse' : ''}` });
+            wheel.style.setProperty('--initial-angle', (row + column) % 2 ? '11.25deg' : '0deg');
+            wheel.appendChild(element('polygon', { points: outline.join(' '), class: 'gear' }));
+            wheel.appendChild(element('circle', { r: '24', class: 'gear-cutout' }));
+            wheel.appendChild(element('circle', { r: '10', class: 'gear' }));
+            carrier.appendChild(wheel);
+            svg.appendChild(carrier);
+          }
+        }
+      }
+
+      let pending = false;
+      window.addEventListener('resize', () => {
+        if (pending) return;
+        pending = true;
+        requestAnimationFrame(() => { pending = false; draw(); });
+      });
+      window.addEventListener('pointermove', event => {
+        document.documentElement.style.setProperty('--light-x', event.clientX + 'px');
+        document.documentElement.style.setProperty('--light-y', event.clientY + 'px');
+      }, { passive: true });
+      // Magnify the existing blue credit only when the pointer is on its letters.
+      const credit = document.querySelector('.credit');
+      const lens = document.getElementById('creditMagnifier');
+      const enlarged = document.getElementById('magnifiedCredit');
+      enlarged.textContent = credit.textContent;
+      const zoom = 2.6;
+      const lensSize = 132;
+      const radius = lensSize / 2;
+
+      function moveMagnifier(event) {
+        const rect = credit.getBoundingClientRect();
+        const range = document.createRange();
+        range.selectNodeContents(credit);
+        const overLetters = [...range.getClientRects()].some(part =>
+          event.clientX >= part.left && event.clientX <= part.right &&
+          event.clientY >= part.top && event.clientY <= part.bottom
+        );
+        if (!overLetters || event.pointerType === 'touch') {
+          lens.classList.remove('visible');
+          return;
+        }
+
+        // Float above the pointer while sampling the exact footer position below it.
+        const left = Math.max(4, Math.min(innerWidth - lensSize - 4, event.clientX - radius));
+        const top = Math.max(4, event.clientY - lensSize - 24);
+        lens.style.left = left + 'px';
+        lens.style.top = top + 'px';
+        enlarged.style.width = rect.width + 'px';
+        enlarged.style.left = (radius - zoom * (event.clientX - rect.left)) + 'px';
+        enlarged.style.top = (radius - zoom * (event.clientY - rect.top)) + 'px';
+        enlarged.style.transform = 'scale(' + zoom + ')';
+        lens.classList.add('visible');
+      }
+
+      window.addEventListener('pointermove', moveMagnifier, { passive: true });
+      window.addEventListener('pointerleave', () => lens.classList.remove('visible'));
+      window.addEventListener('blur', () => lens.classList.remove('visible'));
+      draw();
+    })();
+  </script>
+</body>
+</html>
