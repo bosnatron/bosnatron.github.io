@@ -3,10 +3,91 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title></title>
+  <title>BOSNATRON</title>
   <style>
-    html, body { margin: 0; min-height: 100%; background-color: #C2B280; }
+    :root { color-scheme: light; }
+    html, body { width: 100%; min-height: 100%; margin: 0; }
+    body { background: #C2B280; overflow: hidden; }
+    .gear-field { position: fixed; inset: 0; display: block; width: 100%; height: 100%; pointer-events: none; }
+    .gear { fill: #765838; fill-opacity: .20; stroke: #6C5134; stroke-opacity: .20; stroke-width: 1.2; }
+    .gear-cutout { fill: #C2B280; fill-opacity: .76; }
+    .gear-wheel { transform-box: fill-box; transform-origin: center; animation: gear-turn 24s linear infinite; }
+    .gear-wheel.reverse { animation-direction: reverse; }
+    @keyframes gear-turn { from { transform: rotate(var(--initial-angle)); } to { transform: rotate(calc(var(--initial-angle) + 360deg)); } }
+    .credit {
+      position: fixed; left: 16px; right: 16px; bottom: 12px;
+      margin: 0; color: #315b91; font: 11px/1.5 Arial, Helvetica, sans-serif;
+      text-align: center; letter-spacing: .015em;
+    }
+    @media (prefers-reduced-motion: reduce) { .gear-wheel { animation-play-state: paused; } }
   </style>
 </head>
-<body></body>
+<body>
+  <svg id="gearField" class="gear-field" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg>
+  <p class="credit">This page is Edin's creation. All copyrights are allowed regarding this HTML code and visual preview. Powered by BOSNATRON.</p>
+  <script>
+    (() => {
+      const svg = document.getElementById('gearField');
+      const NS = 'http://www.w3.org/2000/svg';
+      const teeth = 16;
+      const pitchRadius = 70;
+      const outerRadius = 76;
+      const rootRadius = 64;
+      const step = pitchRadius * 2;
+      const toothAngle = (2 * Math.PI) / teeth;
+
+      // Adjacent gears turn at the same speed in opposite directions.
+      const outline = [];
+      for (let t = 0; t < teeth; t++) {
+        const start = t * toothAngle;
+        for (const [fraction, radius] of [
+          [0.00, rootRadius], [0.16, rootRadius],
+          [0.32, outerRadius], [0.68, outerRadius],
+          [0.84, rootRadius]
+        ]) {
+          const angle = start + fraction * toothAngle;
+          outline.push(`${(Math.cos(angle) * radius).toFixed(2)},${(Math.sin(angle) * radius).toFixed(2)}`);
+        }
+      }
+
+      function element(tag, attributes) {
+        const node = document.createElementNS(NS, tag);
+        for (const [name, value] of Object.entries(attributes)) node.setAttribute(name, value);
+        return node;
+      }
+
+      function draw() {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+        svg.replaceChildren();
+        const columns = Math.ceil(width / step) + 2;
+        const rows = Math.ceil(height / step) + 2;
+
+        for (let row = -1; row < rows; row++) {
+          for (let column = -1; column < columns; column++) {
+            const x = column * step + step / 2;
+            const y = row * step + step / 2;
+            const carrier = element('g', { transform: `translate(${x} ${y})` });
+            const wheel = element('g', { class: `gear-wheel${(row + column) % 2 ? ' reverse' : ''}` });
+            wheel.style.setProperty('--initial-angle', (row + column) % 2 ? '11.25deg' : '0deg');
+            wheel.appendChild(element('polygon', { points: outline.join(' '), class: 'gear' }));
+            wheel.appendChild(element('circle', { r: '24', class: 'gear-cutout' }));
+            wheel.appendChild(element('circle', { r: '10', class: 'gear' }));
+            carrier.appendChild(wheel);
+            svg.appendChild(carrier);
+          }
+        }
+      }
+
+      let pending = false;
+      window.addEventListener('resize', () => {
+        if (pending) return;
+        pending = true;
+        requestAnimationFrame(() => { pending = false; draw(); });
+      });
+      draw();
+    })();
+  </script>
+</body>
 </html>
