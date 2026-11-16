@@ -8,6 +8,12 @@
     :root { color-scheme: light; }
     html, body { width: 100%; min-height: 100%; margin: 0; }
     body { background: #C2B280; overflow: hidden; }
+    .topic-bar {
+      position: fixed; top: 0; left: 0; right: 0; height: 68px;
+      z-index: 4; background: #D40000;
+      box-shadow: 0 2px 8px rgba(60, 29, 12, .15);
+      pointer-events: none;
+    }
     .sunlight {
       position: fixed; inset: 0; pointer-events: none;
       background: radial-gradient(circle 240px at var(--light-x, 50%) var(--light-y, 50%),
@@ -44,6 +50,7 @@
 </head>
 <body>
   <div class="sunlight" aria-hidden="true"></div>
+  <header class="topic-bar" aria-label="Future topic header"></header>
   <svg id="gearField" class="gear-field" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg>
   <p class="credit">This page is Edin's creation. All copyrights are allowed regarding this HTML code and visual preview. Powered by BOSNATRON.</p>
   <div id="creditMagnifier" class="magnifier" aria-hidden="true">
